@@ -26,15 +26,16 @@ type //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
        function Scatter( const WorldRay_:TRayRay; const WorldHit_:TRayHit ) :TSingleRGB; override;
      end;
 
-     TMyMaterialMirror = class( TRayMaterial )
+     TMyMaterialFresnelMirror = class( TRayMaterial )
      private
      protected
-       _SpecRatio :TSingleRGB;
+       _Fresnel0Ratio :TSingleRGB;
      public
        constructor Create;
        ///// プロパティ
-       property SpecRatio :TSingleRGB read _SpecRatio write _SpecRatio;
+       property Fresnel0Ratio :TSingleRGB read _Fresnel0Ratio write _Fresnel0Ratio;
        ///// メソッド
+       function Fresnel(Fresnel0:TSingleRGB ;Nor, Ray:TSingle3D):TSingleRGB;
        function Scatter( const WorldRay_:TRayRay; const WorldHit_:TRayHit ) :TSingleRGB; override;
      end;
 
@@ -116,16 +117,28 @@ end;
 
 
 //TMyMaterialMirror
-constructor TMyMaterialMirror.Create;
+constructor TMyMaterialFresnelMirror.Create;
 begin
      inherited;
 
-     _SpecRatio := TSingleRGB.Create( 1, 1, 1 );
+     _Fresnel0Ratio := TSingleRGB.Create( 1, 1, 1 );
 end;
 
 /////////////////////////////////////////////////////////////////////// メソッド
 
-function TMyMaterialMirror.Scatter( const WorldRay_:TRayRay; const WorldHit_:TRayHit ) :TSingleRGB;
+function TMyMaterialFresnelMirror.Fresnel(Fresnel0:TSingleRGB ;Nor, Ray:TSingle3D):TSingleRGB;
+begin
+    if DotProduct(Ray, Nor) >= 0 then
+    begin
+        Result := Fresnel0 + (TSingleRGB.Create(1.0, 1.0, 1.0) - Fresnel0) *
+              Power(1.0-DotProduct(Ray, Nor), 5.0);
+    end else
+    begin
+        Result := TSingleRGB.Create(1.0, 1.0, 1.0);
+    end;
+end;
+
+function TMyMaterialFresnelMirror.Scatter( const WorldRay_:TRayRay; const WorldHit_:TRayHit ) :TSingleRGB;
 var
    ReA :TRayRay;
 begin
@@ -135,11 +148,15 @@ begin
           Ord     := WorldRay_.Ord + 1;
           Ray.Pos := WorldHit_.Pos;
           Ray.Vec := Reflect( WorldRay_.Ray.Vec, WorldHit_.Nor );
+          Ray.Vec.X := Ray.Vec.X + 0.05*(Random-0.5);
+          Ray.Vec.Y := Ray.Vec.Y + 0.05*(Random-0.5);
+          Ray.Vec.Z := Ray.Vec.Z + 0.05*(Random-0.5);
+          Ray.Vec := Ray.Vec.Unitor;
           Len     := Single.PositiveInfinity;
           Hit     := nil;
      end;
 
-     Result := _SpecRatio * World.Raytrace( ReA );
+     Result := Fresnel(_Fresnel0Ratio, WorldHit_.Nor.Unitor, -WorldRay_.Ray.Unitor.Vec) * World.Raytrace( ReA );
 end;
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】

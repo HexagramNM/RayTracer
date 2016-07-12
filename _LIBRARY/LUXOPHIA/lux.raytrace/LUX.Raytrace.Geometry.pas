@@ -64,6 +64,7 @@ type //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
        constructor Create; override;
        ///// プロパティ
        property IteraN :Integer read _IteraN write _IteraN;
+       function pDistanceFunc(const P_:TdSingle3D ) :TdSingle;
      end;
 
      //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TRayTorus
@@ -302,6 +303,11 @@ begin
 end;
 
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& public
+
+function TRayImplicit.pDistanceFunc(const P_:TdSingle3D) :TdSingle;
+begin
+     Result := DistanceFunc(P_);
+end;
 
 constructor TRayImplicit.Create;
 begin
