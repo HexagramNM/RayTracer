@@ -236,6 +236,10 @@ begin
           Ord     := WorldRay_.Ord + 1;
           Ray.Pos := WorldHit_.Pos;
           Ray.Vec := Reflect( WorldRay_.Ray.Vec, WorldHit_.Nor );
+          Ray.Vec.X := Ray.Vec.X + 0.05*(Random-0.5);
+          Ray.Vec.Y := Ray.Vec.Y + 0.05*(Random-0.5);
+          Ray.Vec.Z := Ray.Vec.Z + 0.05*(Random-0.5);
+          Ray.Vec := Ray.Vec.Unitor;
           Len     := Single.PositiveInfinity;
           Hit     := nil;
      end;

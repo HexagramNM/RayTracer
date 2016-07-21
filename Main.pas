@@ -59,7 +59,7 @@ procedure TForm1.MakeScene;
 var
    M, S :Integer;
    Parameter : array[1..5] of Single;
-   A, B :TRayImplicit;
+   A ,B, C:TRayImplicit;
 begin
      ////////// 世界
 
@@ -76,10 +76,10 @@ begin
      _Camera := TRayCamera.Create( _World );
      with _Camera do
      begin
-          LocalMatrix := TSingleM4.Translate( 1.5, 0, 0)
-                        * TSingleM4.RotateY( DegToRad( -10 ) )
-                        * TSingleM4.RotateX( DegToRad( -25 ) )
-                       * TSingleM4.Translate( 0, 0, 28);
+          LocalMatrix := TSingleM4.Translate(2.5, 0.0, 0)    //2.5, 0, 0
+                        * TSingleM4.RotateY( DegToRad( -10 ) ) //-10
+                        * TSingleM4.RotateX( DegToRad( -25 ) )  //-25
+                       * TSingleM4.Translate( 0, 0, 28); //0, 0, 28
      end;
 
      _Render.Camera := _Camera;
@@ -122,52 +122,85 @@ begin
           end;
      end;
 
-     A := TMyBox.Create(_World);
-     with TMyBox(A) do
+       {
+     A := TMyAnd.Create(_World);
+     TMyAnd(A).ObjectA := TMyBox.Create(A);
+     TMyAnd(A).ObjectB := TMySphere.Create(A);
+     with TMyAnd(A) do
      begin
-          X := 3.0;
-          Y := 3.0;
-          Z := 3.0;
-          LocalMatrix := TSingleM4.Translate(0,-9,0);
-
-          {Material := TMyMaterialFresnelMirror.Create;
-          TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.98, 0.82, 0.76);}
-     end;
-
-     B := TMySphere.Create(_World);
-     with TMySphere(B) do
-     begin
-          Radius := 3.0;
-          LocalMatrix := TSingleM4.Translate(-2.0,-8,0);
-
-          {Material := TMyMaterialFresnelMirror.Create;
-          TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.98, 0.82, 0.76);}
-     end;
-
-     with TMyAnd.Create(_World) do
-     begin
-         ObjectA := A;
-         ObjectB := B;
+         with TMyBox(ObjectA) do
+         begin
+             X := 3.0;
+             Y := 3.0;
+             Z := 3.0;
+             LocalMatrix := TSingleM4.Translate(0.0,-1.0,0.0);
+         end;
+         with TMySphere(ObjectB) do
+             begin
+             Radius := 3.0;
+             LocalMatrix := TSingleM4.Translate(-2.0,0,0);
+         end;
          MatA := ObjectA.LocalMatrix.Inverse();
          MatB := ObjectB.LocalMatrix.Inverse();
-         LocalMatrix := TSingleM4.Translate(4.0,7.0,0);
+         LocalMatrix := TSingleM4.Translate(4.0,-1.0,0);
+         Material := TMyMaterialFresnelMirror.Create;
+         TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+
+     end;
+
+     B := TMyOr.Create(_World);
+     TMyOr(B).ObjectA := TMyBox.Create(A);
+     TMyOr(B).ObjectB := TMySphere.Create(A);
+     with TMyOr(B) do
+     begin
+         with TMyBox(ObjectA) do
+         begin
+             X := 3.0;
+             Y := 3.0;
+             Z := 3.0;
+             LocalMatrix := TSingleM4.Translate(0,-1,0);
+         end;
+         with TMySphere(ObjectB) do
+             begin
+             Radius := 3.0;
+             LocalMatrix := TSingleM4.Translate(-2.0,0,0);
+         end;
+         MatA := ObjectA.LocalMatrix.Inverse();
+         MatB := ObjectB.LocalMatrix.Inverse();
+         LocalMatrix := TSingleM4.Translate(-4.0,-1.0,0);
          Material := TMyMaterialFresnelMirror.Create;
          TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
      end;
 
-     ////////// 超楕円体
-     {with TMyBox.Create( _World ) do
+     C := TMySub.Create(_World);
+     TMyOr(C).ObjectA := TMyBox.Create(C);
+     TMyOr(C).ObjectB := TMySphere.Create(C);
+     with TMyOr(C) do
      begin
-          X := 3.0;
-          Y := 3.0;
-          Z := 3.0;
-          LocalMatrix := TSingleM4.Translate(0,3,0);
+         with TMyBox(ObjectA) do
+         begin
+             X := 3.0;
+             Y := 3.0;
+             Z := 3.0;
+             LocalMatrix := TSingleM4.Translate(0,-1,0);
+         end;
+         with TMySphere(ObjectB) do
+             begin
+             Radius := 3.0;
+             LocalMatrix := TSingleM4.Translate(-2.0,0,0);
+         end;
+         MatA := ObjectA.LocalMatrix.Inverse();
+         MatB := ObjectB.LocalMatrix.Inverse();
+         LocalMatrix := TSingleM4.Translate(11.0,-1.0,0);
+         Material := TMyMaterialFresnelMirror.Create;
+         TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
 
-          Material := TMyMaterialFresnelMirror.Create;
-          TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.98, 0.82, 0.76);
-     end;     }
+     end;   }
 
-     {Parameter[1] := 0.1;
+     ////////// 超楕円体
+
+
+    Parameter[1] := 0.1;
      Parameter[2] := 0.5;
      Parameter[3] := 1.0;
      Parameter[4] := 2.0;
@@ -190,23 +223,56 @@ begin
             end;
          end;
      end;
+     with TMyTetrahedron.Create(_World) do
+     begin
+       Size := 3.0;
+        LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 1, 0) * TSingleM4.RotateX(90);
+
+        Material := TMyMaterialFresnelMirror.Create;
+        TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+     end;
      with TMyBox.Create( _World ) do
             begin
-                X := 1.5;
-                Y := 1.5;
-                Z := 1.5;
-                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 1, 0);
+                X := 1.0;
+                Y := 1.0;
+                Z := 1.0;
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 2, 0);
 
                 Material := TMyMaterialFresnelMirror.Create;
                 TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
 
             end;
+     with TMyOctahedron.Create(_World) do
+     begin
+       Size := 2.0;
+        LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 3, 0);
+
+        Material := TMyMaterialFresnelMirror.Create;
+        TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+     end;
+     with TMyDodecahedron.Create(_World) do
+     begin
+       Internalradius := 1.2;
+        LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 4, 0);
+
+        Material := TMyMaterialFresnelMirror.Create;
+        TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+     end;
+
+     with TMyIcosahedron.Create(_World) do
+     begin
+       Internalradius := 1.2;
+        LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 5, 0);
+
+        Material := TMyMaterialFresnelMirror.Create;
+        TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+     end;
      with TMyCylinder.Create( _World ) do
             begin
                 URadius := 1.5;
                 DRadius := 1.5;
                 Height := 1.5;
-                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 2, 0);
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 7, 10.5 - 3.5 * 2, 0);
 
                 Material := TMyMaterialFresnelMirror.Create;
                 TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
@@ -217,7 +283,7 @@ begin
                 URadius := 0.5;
                 DRadius := 1.5;
                 Height := 1.5;
-                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 3, 0);
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 7, 10.5 - 3.5 * 3, 0);
 
                 Material := TMyMaterialFresnelMirror.Create;
                 TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
@@ -228,7 +294,7 @@ begin
                 URadius := 0.0;
                 DRadius := 1.5;
                 Height := 1.5;
-                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 4, 0);
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 7, 10.5 - 3.5 * 4, 0);
 
                 Material := TMyMaterialFresnelMirror.Create;
                 TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
@@ -238,15 +304,102 @@ begin
             begin
                 LargeR := 1.5;
                 SmallR := 0.5;
-                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 6, 10.5 - 3.5 * 5, 0);
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 7, 10.5 - 3.5 * 5, 0);
 
                 Material := TMyMaterialFresnelMirror.Create;
                 TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
 
             end;
 
-     }
 
+     {   with TMyTetrahedron.Create(_World) do
+     begin
+       Size := 3.0;
+        LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 1, 10.5 - 3.5 * 2.5, 0) * TSingleM4.RotateX(90);
+
+        Material := TMyMaterialFresnelMirror.Create;
+        TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+     end;
+     with TMyBox.Create( _World ) do
+            begin
+                X := 1.0;
+                Y := 1.0;
+                Z := 1.0;
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 2, 10.5 - 3.5 * 2.5, 0);
+
+                Material := TMyMaterialFresnelMirror.Create;
+                TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+
+            end;
+     with TMyOctahedron.Create(_World) do
+     begin
+       Size := 2.0;
+        LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 3, 10.5 - 3.5 * 2.5, 0);
+
+        Material := TMyMaterialFresnelMirror.Create;
+        TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+     end;
+     with TMyDodecahedron.Create(_World) do
+     begin
+       Internalradius := 1.2;
+        LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 4, 10.5 - 3.5 * 2.5, 0);
+
+        Material := TMyMaterialFresnelMirror.Create;
+        TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+     end;
+
+     with TMyIcosahedron.Create(_World) do
+     begin
+       Internalradius := 1.2;
+        LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 5, 10.5 - 3.5 * 2.5, 0);
+
+        Material := TMyMaterialFresnelMirror.Create;
+        TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+     end;
+     with TMyCylinder.Create( _World ) do
+            begin
+                URadius := 1.5;
+                DRadius := 1.5;
+                Height := 1.5;
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 1, 10.5 - 3.5 * 3.5, 0);
+
+                Material := TMyMaterialFresnelMirror.Create;
+                TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+
+            end;
+     with TMyCylinder.Create( _World ) do
+            begin
+                URadius := 0.5;
+                DRadius := 1.5;
+                Height := 1.5;
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 2, 10.5 - 3.5 * 3.5, 0);
+
+                Material := TMyMaterialFresnelMirror.Create;
+                TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+
+            end;
+     with TMyCylinder.Create( _World ) do
+            begin
+                URadius := 0.0;
+                DRadius := 1.5;
+                Height := 1.5;
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 3, 10.5 - 3.5 * 3.5, 0);
+
+                Material := TMyMaterialFresnelMirror.Create;
+                TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+
+            end;
+     with TMyTorus.Create( _World ) do
+            begin
+                LargeR := 1.5;
+                SmallR := 0.5;
+                LocalMatrix := TSingleM4.Translate(-10.5 + 3.5 * 4, 10.5 - 3.5 * 3.5, 0);
+
+                Material := TMyMaterialFresnelMirror.Create;
+                TMyMaterialFresnelMirror(Material).Fresnel0Ratio := TSingleRGB.Create(0.95, 0.64, 0.54);
+
+            end;
+     }
 
 end;
 
